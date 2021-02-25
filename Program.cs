@@ -10,11 +10,14 @@ namespace AsyncTest
         {
             Console.ReadKey();
             //模拟并发
-            while (true)
+            for (int i = 0; i < 1000; i++)
             {
-                Task.Run(Producer);
-                 //Task.Run(Producer2);
-                //Task.Run(ProducerQueue);
+               
+                Task.Run(() => 
+                     Producer(i)
+                );
+                // Task.Run(Producer3);
+                // Task.Run(ProducerQueue);
                 Thread.Sleep(200);
             }
 
@@ -22,77 +25,77 @@ namespace AsyncTest
         /// <summary>
         /// 如果处理程序耗时>请求耗时，也就是说引起并发，就会导致死锁
         /// </summary>
-        static void Producer()
+        static void Producer(int i)
         {
-            var result = Process().Result;
+            var result = Process(i).Result;
             //或者
             //Process().Wait();
         }
         /// <summary>
         /// 正常
         /// </summary>
-        static void Producer2()
+        static void Producer2(int i)
         {
-            var result = Process().ConfigureAwait(false);
+            var result = Process(i).ConfigureAwait(false);
         }
         //cpu 内存均正常
-        static async Task Producer3()
+        static async Task Producer3(int i)
         {
-            await Process();
+            await Process(i);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        static void ProducerQueue()
+        static void ProducerQueue(int i)
         {
-            ProcessQueue().Wait();
+            ProcessQueue(i).Wait();
             //或者
             //Process().Wait();
         }
         /// <summary>
         /// 正常
         /// </summary>
-        static void ProducerQueue2()
+        static void ProducerQueue2(int i)
         {
-            var result = ProcessQueue().ConfigureAwait(false);
+            var result = ProcessQueue(i).ConfigureAwait(false);
         }
         //cpu 内存均正常
-        static async Task ProducerQueue3()
+        static async Task ProducerQueue3(int i)
         {
-            await ProcessQueue();
+            await ProcessQueue(i);
         }
 
-        static async Task<bool> Process()
+        static async Task<bool> Process(int i)
         {
-            ConsoleWrite("Start");
+            ConsoleWrite($"Start{i}");
             await Task.Run(() =>
             {
                 //模拟任务执行耗时
                 Thread.Sleep(1000);
             });
 
-            ConsoleWrite("End");
+            ConsoleWrite($"End{i}");
             return true;
         }
 
-      
 
-        static async Task ProcessQueue()
+
+        static async Task ProcessQueue(int i)
         {
-            Console.WriteLine("Start - " + GetCurrentThreadID());
-
+            ConsoleWrite($"Start{i}");
             ThreadPool.QueueUserWorkItem(state =>
             {
-                Console.WriteLine("Hello, " + (string)state + GetCurrentThreadID());
-            }, await GetName());
-            Console.WriteLine("Ended - " + GetCurrentThreadID());
+                ConsoleWrite("Hello" + (string)state);
+            }, await GetName(i));
+            ConsoleWrite($"End{i}");
         }
 
-        private static async Task<string> GetName()
+        private static async Task<string> GetName(int i)
         {
             Thread.Sleep(1000);
-            return "ZhiXin" + GetCurrentThreadID();
+            Random r = new Random();
+            return $"ZhiXin[{r.Next(100, 999)}]-[{i}]";
         }
         private static string GetCurrentThreadID()
         {
@@ -100,14 +103,14 @@ namespace AsyncTest
         }
         private static void ConsoleWrite(string type)
         {
-            if (type == "Start")
+            if (type.Contains("Start"))
             {
                 //Console.BackgroundColor = ConsoleColor.Blue; //设置背景色
                 Console.ForegroundColor = ConsoleColor.Green; //设置前景色，即字体颜色
             }
-            else
+            else if (type.Contains("End"))
             {
-               // Console.BackgroundColor = ConsoleColor.Red; //设置背景色
+                // Console.BackgroundColor = ConsoleColor.Red; //设置背景色
                 Console.ForegroundColor = ConsoleColor.Red; //设置前景色，即字体颜色
             }
             Console.WriteLine($"{type} - " + GetCurrentThreadID());
