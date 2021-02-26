@@ -10,15 +10,15 @@ namespace AsyncTest
         {
             Console.ReadKey();
             //模拟并发
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 300; i++)
             {
                
                 Task.Run(() => 
-                     Producer(i)
+                     Producer3(i)
                 );
                 // Task.Run(Producer3);
                 // Task.Run(ProducerQueue);
-                Thread.Sleep(200);
+                Thread.Sleep(300);
             }
         }
         /// <summary>
@@ -71,7 +71,7 @@ namespace AsyncTest
             await Task.Run(() =>
             {
                 //模拟任务执行耗时
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
             });
 
             ConsoleWrite($"End{i}");
